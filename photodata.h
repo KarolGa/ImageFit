@@ -1,37 +1,23 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-using namespace std;
-using namespace cv;
+using std::cin;
+using std::cout;
+using std::endl;
 
-
-class PhotoData
-{
-	typedef int dimensions[6000][3];
-	dimensions * imgRgb = new dimensions[6000];
-	typedef int dimen[6000];
-	dimen * img = new dimen[6000];
-	vector <int> contourX, contourY;
+class PhotoData{
+	std::vector <std::vector <int>> img;
+	std::vector <int> contourX, contourY;
 	double widthDiagonal, heightDiagonal, orientation;
-	int boundLeft, boundRight, boundUp, boundDown;
-
+	unsigned int boundLeft, boundRight, boundUp, boundDown;
+	cv::Mat_<int> imgMat;
 public:
 	int imgHeight, imgWidth;
-	PhotoData();
-	~PhotoData();
-	void imRead(string im);
-	void pngToImg(Mat_<int>png);
-	void writeMatToFile(Mat& m, const char* filename);
-	void writePngToFile();
-	void imGrayShow(int x, int y, int width, int height);
-	void imRgbShow(int x, int y, int width, int height);
 
-	int getRed(int x, int y);
-	int getGreen(int x, int y);
-	int getBlue(int x, int y);
 	void setImg(int x, int y, int val);
 	int getImg(int x, int y);
 	void setContourCoor(int x, int y);
@@ -42,15 +28,26 @@ public:
 	double getWidthDiagonal();
 	void setHeightDiagonal(double hD);
 	double getHeightDiagonal();
-	double getMaxDiagonal();
 	void setOrientation(double orient);
-	double getOrientation();
 	void setBoundLeft(int left);
-	int getBoundLeft();
 	void setBoundRight(int right);
-	int getBoundRight();
+
+	PhotoData();
+	~PhotoData();
+	void matToImg(cv::Mat_<int>png); // converts Mat_<int> to img 
+	void imgToMat(); // converts img to Mat_<int>
+	void flipHorizontal();
+	void writeMatToFile(cv::Mat& m, const char* filename);
+	void writePngToFile();
+	void imGrayShow(int x, int y, int width, int height, bool isRot); //shows in console part of gray or binarized image when image is moved by its width and height (so after rotation)
+	void imGrayShow(int x, int y, int width, int height);  //shows in console part of gray or binarized image
 	void setBoundUp(int up);
-	int getBoundUp();
 	void setBoundDown(int down);
+	double getOrientation();
+	double getMaxDiagonal();
+	int getBoundLeft();
+	int getBoundRight();
+	int getBoundUp();
 	int getBoundDown();
+	cv::Mat_<int> getImgMat();
 };

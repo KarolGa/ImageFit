@@ -1,56 +1,38 @@
 #include "stdafx.h"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include "photodata.h""
-using namespace std;
-
-
-
+#include "photodata.h"
 	PhotoData::PhotoData() {
 	imgWidth = 640;
 	imgHeight = 400;
-	memset(img, 0, 6000 * 6000 * sizeof(int));
-	memset(imgRgb, 0, 6000 * 6000 * 3 * sizeof(int));
+	img.resize(3*imgWidth, std::vector<int>(3*imgHeight));
 }
-	PhotoData::~PhotoData()
-{
-}
-	void PhotoData::imRead(string im) { // method reads rgb photo and creates photo array [width][height][5 fields - red, green, blue, x, y. Last 2 are just for checking if correct pixel was chose
-		int red, gre, blu;
-		double x, y;
-		string line;
-		ifstream myFile(im);
-		if (myFile.is_open()) {
-			for (int i = 0; i < imgHeight; i++) {
-				for (int j = 0; j < imgWidth; j++) {
-					getline(myFile, line);
-					istringstream istr(line);
-					istr >> x >> y >> red >> gre >> blu; // x,y are not used for now
-					imgRgb[j][i][0] = red;
-					imgRgb[j][i][1] = gre;
-					imgRgb[j][i][2] = blu;
-					//x *= 1000;
-					//y *= 1000;
-					//imgRgb[j][i][3] = static_cast<int>(x);
-					//imgRgb[j][i][4] = static_cast<int>(y);
-				}
-			}
-			myFile.close();
-		}
-	}
-	void PhotoData::pngToImg(Mat_<int>png) {
+	PhotoData::~PhotoData(){}	
+	void PhotoData::matToImg(cv::Mat_<int>png) {
 		for (int i = 0; i<png.cols; i++) {
-			for (int j = 0; j<png.rows; j++) {
-				img[i][j] = png(j, i);
+		for (int j = 0; j<png.rows; j++) {
+			img[i][j] = png(j, i);
+		}
+		}
+	}
+	void PhotoData::imgToMat() {
+		for (int i = 0; i<imgHeight; i++) {
+			for (int j = 0; j<imgWidth; j++) {
+				imgMat(j, i) = img[i][j];
 			}
 		}
 	}
-	void PhotoData::writeMatToFile(Mat& m, const char* filename) { // method writes 
-		ofstream fout(filename);
+	void PhotoData::flipHorizontal()
+	{
+		int k;
+		for (int i = 0; i < imgHeight/2; i++) {
+		for (int j = 0; j < imgWidth/2; j++) {
+			 k = img[j][i];
+			img[j][i] = img[j][imgHeight - 1 - i ];
+			img[j][imgHeight - 1 - i] = k;
+		}
+		}
+	}
+	void PhotoData::writeMatToFile(cv::Mat& m, const char* filename) {
+		std::ofstream fout(filename);
 		if (!fout) {
 			cout << "File Not Opened" << endl;  return;
 		}
@@ -66,35 +48,43 @@ using namespace std;
 	void PhotoData::writePngToFile() {
 
 	}
-
-	void PhotoData::imGrayShow(int x, int y, int width, int height) { //shows part of gray or binarized image
+	
+	void PhotoData::imGrayShow(int x, int y, int width, int height, bool isRot) { 
 		int rot;
-		cout << "If you rotated photo, type 1, else type 0: ";
-		cin >> rot;
-		if (rot == 1) {
+		if (width > 100) {
+			cout << "Width is too big, it is set max its maximum value = 100" << endl;
+				width = 100;
+		}
+
+		if (isRot) {
 			x += imgWidth;
 			y += imgHeight;
 		}
 
-		for (int i = y; i < y + height; i++) {
+		for (int i = y + height -1; i >= y; i--) {
+			for (int j = x; j < x + width; j++) {
+				if (img[j][i] < 10) { cout << img[j][i] << " "; }
+				else if (img[j][i] >= 10) cout << img[j][i];
+			}
+			cout << endl;
+		}
+		cout << endl;
+	}
+	void PhotoData::imGrayShow(int x, int y, int width, int height) {
+		int rot;
+		if (width > 100) {
+			cout << "Width is too big, it is set max its maximum value = 100" << endl;
+			width = 100;
+		}
+		for (int i = y + height - 1; i >= y; i--) {
 			for (int j = x; j < x + width; j++) {
 				cout << img[j][i] << " ";
 			}
 			cout << endl;
 		}
-	}
-	void PhotoData::imRgbShow(int x, int y, int width, int height) { //shows part of rgb photo
-		for (int i = y; i < y + height; i++) {
-			for (int j = x; j < x + width; j++) {
-				cout << imgRgb[j][i][0] << " " << imgRgb[j][i][1] << " " << imgRgb[j][i][2] << "| ";
-			}
-			cout << endl;
-		}
+		cout << endl;
 	}
 
-	int PhotoData::getRed(int x, int y) { return imgRgb[x][y][0]; }
-	int PhotoData::getGreen(int x, int y) { return imgRgb[x][y][1]; }
-	int PhotoData::getBlue(int x, int y) { return imgRgb[x][y][2]; }
 	void PhotoData::setImg(int x, int y, int val) { img[x][y] = val; }
 	int PhotoData::getImg(int x, int y) { return img[x][y]; }
 	void PhotoData::setContourCoor(int x, int y) {
@@ -125,6 +115,6 @@ using namespace std;
 	int PhotoData::getBoundUp() { return boundUp; }
 	void PhotoData::setBoundDown(int down) { boundDown = down; }
 	int PhotoData::getBoundDown() { return boundDown; }
-
+	cv::Mat_<int> PhotoData::getImgMat() { return imgMat; }
 
 
